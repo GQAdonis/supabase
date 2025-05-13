@@ -48,6 +48,14 @@ services:
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
       # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
+    networks:
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.supabase-studio.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/`)"
+      - "traefik.http.routers.supabase-studio.entrypoints=websecure"
+      - "traefik.http.routers.supabase-studio.tls.certresolver=myresolver"
+      - "traefik.http.services.supabase-studio.loadbalancer.server.port=3000"
 
   kong:
     container_name: supabase-kong
@@ -76,6 +84,50 @@ services:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     # https://unix.stackexchange.com/a/294837
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    networks:
+      - traefik_network
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.supabase-kong-rest.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/rest`)"
+    - "traefik.http.routers.supabase-kong-rest.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-rest.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-rest.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-auth.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/auth`)"
+    - "traefik.http.routers.supabase-kong-auth.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-auth.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-auth.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/storage`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/graphql`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/functions`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/realtime`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/pg`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
+    - "traefik.http.routers.supabase-kong-storage.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/analytics`)"
+    - "traefik.http.routers.supabase-kong-storage.entrypoints=websecure"
+    - "traefik.http.routers.supabase-kong-storage.tls.certresolver=myresolver"
+    - "traefik.http.routers.supabase-kong-storage.priority=10"
+    - "traefik.http.services.supabase-kong.loadbalancer.server.port=8000"
 
   auth:
     container_name: supabase-auth
@@ -311,6 +363,15 @@ services:
       PG_META_DB_NAME: ${POSTGRES_DB}
       PG_META_DB_USER: supabase_admin
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.supabase-pg-meta.rule=Host(`supabase.prometheusags.ai`) && PathPrefix(`/api/platform/pg-meta`)"
+      - "traefik.http.routers.supabase-pg-meta.entrypoints=websecure"
+      - "traefik.http.routers.supabase-pg-meta.tls.certresolver=myresolver"
+      - "traefik.http.routers.supabase-pg-meta.priority=20"
+      - "traefik.http.services.supabase-pg-meta.loadbalancer.server.port=8080"
 
   functions:
     container_name: supabase-edge-functions
@@ -526,3 +587,7 @@ services:
 
 volumes:
   db-config:
+
+networks:
+  traefik_network:
+    external: true
